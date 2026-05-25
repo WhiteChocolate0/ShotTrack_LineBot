@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2500" height="1686" viewBox="0 0 2500 1686">
+  <rect width="2500" height="1686" fill="#F7FCFC"/>
+  <rect x="0" y="0" width="2500" height="1686" fill="none" stroke="#27ACB2" stroke-width="16"/>
+  <line x1="833" y1="0" x2="833" y2="1686" stroke="#BFE7E8" stroke-width="8"/>
+  <line x1="1666" y1="0" x2="1666" y2="1686" stroke="#BFE7E8" stroke-width="8"/>
+  <line x1="0" y1="843" x2="2500" y2="843" stroke="#BFE7E8" stroke-width="8"/>
+
+  <g font-family="Arial, 'PingFang TC', 'Noto Sans TC', sans-serif" text-anchor="middle">
+    <text x="416" y="350" font-size="86" font-weight="700" fill="#114D50">近期疫苗時程</text>
+    <text x="416" y="460" font-size="42" fill="#5A7577">Schedule</text>
+
+    <text x="1249" y="350" font-size="86" font-weight="700" fill="#114D50">數位接種紀錄</text>
+    <text x="1249" y="460" font-size="42" fill="#5A7577">Records</text>
+
+    <text x="2082" y="350" font-size="86" font-weight="700" fill="#114D50">手冊掃描紀錄</text>
+    <text x="2082" y="460" font-size="42" fill="#5A7577">Scan</text>
+
+    <text x="416" y="1193" font-size="86" font-weight="700" fill="#114D50">合作診所查詢</text>
+    <text x="416" y="1303" font-size="42" fill="#5A7577">Clinics</text>
+
+    <text x="1249" y="1193" font-size="86" font-weight="700" fill="#114D50">托嬰中心連動</text>
+    <text x="1249" y="1303" font-size="42" fill="#5A7577">Daycare</text>
+
+    <text x="2082" y="1193" font-size="86" font-weight="700" fill="#114D50">寶寶切換與管理</text>
+    <text x="2082" y="1303" font-size="42" fill="#5A7577">Manage</text>
+  </g>
+</svg>
