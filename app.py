@@ -220,19 +220,34 @@ def get_health_card_filename(vaccine):
     return f"{code}.png"
 
 
-def get_health_card_path(vaccine):
-    filename = get_health_card_filename(vaccine)
-    if not filename:
+def get_health_card_family_filename(vaccine):
+    code = vaccine.get("code", "").strip()
+    if not code:
         return None
 
-    return HEALTH_CARD_DIR / filename
+    parts = code.rsplit("-", 1)
+    family_code = parts[0] if len(parts) == 2 and parts[1].isdigit() else code
+    return f"{family_code}.png"
+
+
+def get_health_card_path(vaccine):
+    for filename in [get_health_card_family_filename(vaccine), get_health_card_filename(vaccine)]:
+        if not filename:
+            continue
+
+        path = HEALTH_CARD_DIR / filename
+        if path.exists():
+            return path
+
+    return None
 
 
 def get_health_card_url(vaccine):
-    filename = get_health_card_filename(vaccine)
-    if not filename or not get_health_card_path(vaccine).exists():
+    path = get_health_card_path(vaccine)
+    if not path:
         return None
 
+    filename = path.name
     if PUBLIC_BASE_URL:
         base_url = PUBLIC_BASE_URL.rstrip("/")
     else:
@@ -247,8 +262,11 @@ def get_health_card_url(vaccine):
 def build_health_card_message(vaccine):
     image_url = get_health_card_url(vaccine)
     if not image_url:
-        expected_filename = get_health_card_filename(vaccine)
-        print(f"Health card not found: {expected_filename}", flush=True)
+        expected_filenames = [
+            get_health_card_family_filename(vaccine),
+            get_health_card_filename(vaccine),
+        ]
+        print(f"Health card not found: {expected_filenames}", flush=True)
         return None
 
     print(f"Sending health card image: {image_url}", flush=True)
@@ -688,7 +706,7 @@ def handle_message(event):
             ]
             health_card_message = build_health_card_message(vaccine)
             if health_card_message:
-                if vaccine.get("code") == "5in1-3":
+                if get_health_card_family_filename(vaccine) == "5in1.png":
                     reply_messages.append(TextSendMessage(text=FIVE_IN_ONE_HEALTH_CARD_TRIGGER))
                 reply_messages.append(health_card_message)
 

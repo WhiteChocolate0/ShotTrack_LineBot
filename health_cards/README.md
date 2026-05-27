@@ -4,27 +4,26 @@
 
 ## 檔名規則
 
-請使用 `vaccines.csv` 的 `Sys_Code` 作為檔名：
+優先使用「疫苗系列代碼」作為檔名，讓同一種疫苗的不同劑次共用同一張衛教圖卡：
 
 ```text
-{Sys_Code}.png
+{Vaccine_Family_Code}.png
 ```
 
 範例：
 
 ```text
-HBIG-1.png
-rHepB-1.png
-rHepB-2.png
-rHepB-3.png
-5in1-1.png
-5in1-2.png
-13PCV-1.png
-MMR-1.png
-Var-1.png
-JE-1.png
+rHepB.png
+5in1.png
+13PCV.png
+MMR.png
+Var.png
+JE.png
+2HepA.png
 Tdap-IPV.png
 ```
+
+程式會先找系列圖卡，例如 `5in1.png`。如果找不到，才會退回尋找精準劑次圖卡，例如 `5in1-3.png`。
 
 ## 建議格式
 
