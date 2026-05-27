@@ -35,6 +35,7 @@ WAITING_VACCINATION_DATE = "WAITING_VACCINATION_DATE"
 DEFAULT_VACCINE_STATUS = "尚未行動"
 VACCINE_STATUS_OPTIONS = ["已接種", "已預約", "規劃中"]
 PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL")
+FIVE_IN_ONE_HEALTH_CARD_TRIGGER = "發送 五合一 衛教資訊"
 
 # MVP 暫存資料：服務重啟後會清空，之後再接回資料庫保存。
 registration_sessions = {}
@@ -303,6 +304,13 @@ def build_date_choice_quick_reply():
     ])
 
 
+def build_view_schedule_quick_reply():
+    return QuickReply(items=[
+        QuickReplyButton(action=MessageAction(label="查看近期疫苗資訊", text="查看近期疫苗資訊")),
+        QuickReplyButton(action=MessageAction(label="不用", text="不用")),
+    ])
+
+
 def build_no_baby_quick_reply():
     return QuickReply(items=[
         QuickReplyButton(action=MessageAction(label="新增寶寶", text="新增寶寶資料")),
@@ -393,6 +401,35 @@ def handle_message(event):
 
     if user_msg == "沒關係":
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text="沒問題，需要時再點選「寶寶切換與管理」。"))
+        return
+
+    if user_msg == "不用":
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="好的，需要時再點選「近期疫苗時程」。"))
+        return
+
+    if user_msg == "查看近期疫苗資訊":
+        baby = get_active_baby(user_id)
+        if not baby:
+            line_bot_api.reply_message(
+                event.reply_token,
+                TextSendMessage(
+                    text="目前還沒有寶寶資料。要先新增寶寶嗎？",
+                    quick_reply=build_no_baby_quick_reply()
+                )
+            )
+            return
+
+        if not get_display_schedules(baby["schedules"]):
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"太棒了！{baby['name']} 近期沒有需要施打的疫苗喔！"))
+            return
+
+        line_bot_api.reply_message(
+            event.reply_token,
+            FlexSendMessage(
+                alt_text=f"{baby['name']} 的近期疫苗時程提醒",
+                contents=build_vaccine_carousel(baby["schedules"])
+            )
+        )
         return
 
     if user_msg == "新增寶寶":
@@ -586,20 +623,12 @@ def handle_message(event):
         vaccine["status"] = selected_status
         vaccine["vaccinated_date"] = None
         registration_sessions.pop(user_id, None)
-        baby = get_active_baby(user_id)
-        if not get_display_schedules(baby["schedules"]):
-            line_bot_api.reply_message(
-                event.reply_token,
-                TextSendMessage(text=f"已將 {vaccine['vaccine_name']} 更新為「{selected_status}」。目前沒有需要顯示的近期疫苗。")
-            )
-            return
-
         line_bot_api.reply_message(
             event.reply_token,
-            [
-                TextSendMessage(text=f"已將 {vaccine['vaccine_name']} 更新為「{selected_status}」。"),
-                FlexSendMessage(alt_text=f"{baby['name']} 的近期疫苗時程提醒", contents=build_vaccine_carousel(baby["schedules"]))
-            ]
+            TextSendMessage(
+                text=f"已將 {vaccine['vaccine_name']} 更新為「{selected_status}」。是否需要查看近期疫苗資訊？",
+                quick_reply=build_view_schedule_quick_reply()
+            )
         )
         return
 
@@ -621,7 +650,7 @@ def handle_message(event):
             if user_msg == "其他":
                 line_bot_api.reply_message(
                     event.reply_token,
-                    TextSendMessage(text="請手動輸入實際接種日期，格式為 YYYY-MM-DD，例如 2026-05-25。")
+                    TextSendMessage(text="請手動輸入實際接種日期，格式為 YYYY-MM-DD，例如 2026-01-01。")
                 )
                 return
 
@@ -630,7 +659,7 @@ def handle_message(event):
                 line_bot_api.reply_message(
                     event.reply_token,
                     TextSendMessage(
-                        text="日期格式不正確，請用 YYYY-MM-DD，例如 2026-05-25。",
+                        text="日期格式不正確，請用 YYYY-MM-DD，例如 2026-01-01。",
                         quick_reply=build_date_choice_quick_reply()
                     )
                 )
@@ -659,18 +688,14 @@ def handle_message(event):
             ]
             health_card_message = build_health_card_message(vaccine)
             if health_card_message:
+                if vaccine.get("code") == "5in1-3":
+                    reply_messages.append(TextSendMessage(text=FIVE_IN_ONE_HEALTH_CARD_TRIGGER))
                 reply_messages.append(health_card_message)
 
-            if not get_display_schedules(baby["schedules"]):
-                if not health_card_message:
-                    reply_messages[0] = TextSendMessage(text=f"已更新：{vaccine['vaccine_name']} 已於 {vaccinated_date.isoformat()} 接種。目前沒有需要顯示的近期疫苗。")
-                line_bot_api.reply_message(event.reply_token, reply_messages)
-                return
-
             reply_messages.append(
-                FlexSendMessage(
-                    alt_text=f"{baby['name']} 的近期疫苗時程提醒",
-                    contents=build_vaccine_carousel(baby["schedules"])
+                TextSendMessage(
+                    text="是否需要查看近期疫苗資訊？",
+                    quick_reply=build_view_schedule_quick_reply()
                 )
             )
             line_bot_api.reply_message(
@@ -695,7 +720,7 @@ def handle_message(event):
             if user_msg == "其他":
                 line_bot_api.reply_message(
                     event.reply_token,
-                    TextSendMessage(text="請手動輸入寶寶生日，格式為 YYYY-MM-DD，例如 2026-05-25。")
+                    TextSendMessage(text="請手動輸入寶寶生日，格式為 YYYY-MM-DD，例如 2026-01-01。")
                 )
                 return
 
@@ -704,7 +729,7 @@ def handle_message(event):
                 line_bot_api.reply_message(
                     event.reply_token,
                     TextSendMessage(
-                        text="日期格式不正確，請用 YYYY-MM-DD，例如 2026-05-25。",
+                        text="日期格式不正確，請用 YYYY-MM-DD，例如 2026-01-01。",
                         quick_reply=build_date_choice_quick_reply()
                     )
                 )
